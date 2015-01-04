@@ -1,0 +1,10 @@
+#gameCanvas {
+	width: 100%;
+	height: 500px;
+	border: 5px solid red;
+	border-radius: 20px;
+}
+
+.navbar-default {
+	margin-bottom: 0;
+}
