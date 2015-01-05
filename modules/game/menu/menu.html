@@ -2,8 +2,8 @@
 
 <h2>Join available games</h2>
 <ul>
-	<li>
-		{{games}}
+	<li ng-repeat="game in games">
+		<button type="button" ng-click="joinGame(game.id)">Join {{game.id}}</button>
 	</li>
 </ul>
 

@@ -7,6 +7,7 @@ angular.module('app.game')
 	};
 
 	return {
+		restrict: 'E',
 		template: '<div id="gameCanvas"></div>',
 		link: link
 	}

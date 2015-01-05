@@ -2,11 +2,11 @@ angular.module('app.menu')
 .controller('MenuCtrl', ['$scope', '$state', '$firebase', 'randomString', 'mySocket', function($scope, $state, $firebase, randomString, mySocket) {
 	var ctrl = this;
 
-	$scope.games = {};
-
 	var socket = io();
 
-	mySocket.on('connect', function() {
+	$scope.$on('socket:connect', function() {
+		console.log('on Connect!');
+
 		$scope.session = socket.io.engine.id;
 
 		// Add new player
@@ -18,7 +18,9 @@ angular.module('app.menu')
 		});
 	});
 
-	mySocket.on('server:games', function(data) {
+	$scope.games = {};
+
+	$scope.$on('socket:server:games', function(data) {
 		$scope.games = data;
 	});
 
@@ -39,6 +41,8 @@ angular.module('app.menu')
 	}
 
 	$scope.joinGame = function(id) {
+		console.log('Joining game..');
+
 		mySocket.emit('player:join', {
 			id		: $scope.session,
 			game 	: id

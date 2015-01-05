@@ -2,9 +2,10 @@ var bounds = $(window).innerWidth(),
 	firebase = new Firebase("https://spacebattalion.firebaseio.com/"),
 	bullets = 50
 	musicToggle = true,
-	socket = io(),
+	socket = io.connect(window.location.origin),
 	x = 0,
-	y = 0;
+	y = 0,
+	gameId = '';
 
 AngularSpace.Game = function(game) {
 	this.game;		//	a reference to the currently running game
@@ -29,13 +30,20 @@ AngularSpace.Game = function(game) {
 
 AngularSpace.Game.prototype = {
 	create: function() {
+		var url = window.location.hash.split('/');
+		gameId = url[url.length-1];
+
+	socket.on('server:id', function(data) {
+		console.log('received session id from server!');
+		console.log(data);
+	});
 
 		// start ARCADE system
 		this.physics.startSystem(Phaser.Physics.ARCADE);
 
 		// background music
 		this.bgMusic = this.game.add.audio('backgroundMusic');
-		this.bgMusic.play('', 0, 1, true);
+		//this.bgMusic.play('', 0, 1, true);
 
 		// background tiles
 		this.bg = this.add.tileSprite(0, 0, bounds, bounds, 'bg');
@@ -61,8 +69,14 @@ AngularSpace.Game.prototype = {
 		this.player.anchor.setTo(0.5, 0.5);
 
 		this.game.physics.enable(this.player, Phaser.Physics.ARCADE);
+
+		// if new player connects, create it
+		socket.on('server:join', function(data) {
+			console.log('server:join');
+		});
 	},
 	update: function() {
+
 		// Move player to cursor, fix angle and rotation(speed)
 		var distance = this.game.math.distance(
 			this.player.x, this.player.y,
@@ -93,20 +107,16 @@ AngularSpace.Game.prototype = {
 			}	
 
 			if(x !== this.player.x || y !== this.player.y) {
-				console.log('nieuwe positie!!');
-
-				console.log();
 
 				var pos = JSON.stringify({
+					game 	: gameId,
 					id 		: socket.io.engine.id,
 					x 		: this.player.x,
 					y  		: this.player.y,
 					angle 	: this.player.angle
-				});   	
+				});   
 
 				if(this.diff(this.player.x, x) >= 3 || this.diff(this.player.y, y) >= 3) {
-					console.log('verschil > 1');
-
 					socket.emit('player:move', pos);
 
 					x = this.player.x;
@@ -158,5 +168,8 @@ AngularSpace.Game.prototype = {
 	},
 	diff: function(a, b) {
 		return Math.abs(a - b);
+	},
+	playerJoin: function(data) {
+		console.log('hey ho lets go!');
 	}
 };
