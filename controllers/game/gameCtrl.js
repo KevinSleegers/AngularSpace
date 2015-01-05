@@ -6,6 +6,11 @@ angular.module('app.game')
 
 	mySocket.emit('player:id', socket.io.engine.id);
 
+	mySocket.on('server:test', function(data) {
+		alert(data);
+		console.log('afkomstig van server: ', data);
+	});
+
 	mySocket.on('server:join', function(data) {
 		console.log('data');
 	});

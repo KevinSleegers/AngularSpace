@@ -25,6 +25,8 @@ module.exports = (function(app, io) {
 
         io.sockets.connected[data.id].emit('server:games', games);
         console.log('Server: Sent available games to client!');
+
+        socket.emit('server:test', 'abcdefg');
 	}
 
 	var playerJoin = function(data) {

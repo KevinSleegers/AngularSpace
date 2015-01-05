@@ -4,7 +4,7 @@ angular.module('app.menu')
 
 	var socket = io();
 
-	$scope.$on('socket:connect', function() {
+	mySocket.on('socket:connect', function() {
 		console.log('on Connect!');
 
 		$scope.session = socket.io.engine.id;
