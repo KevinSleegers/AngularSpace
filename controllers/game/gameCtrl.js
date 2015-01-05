@@ -1,10 +1,16 @@
 angular.module('app.game')
 .controller('GameCtrl', function($scope, $injector, mySocket) {
+
 	console.log('Client: Game Controller');
 
 	console.log('Verbonden via: ', socket.io.engine.id);
 
 	mySocket.emit('player:id', socket.io.engine.id);
+
+	socket.on('server:test', function(data) {
+		console.log('server test via socket ipv mySocket');
+		alert(data);
+	});
 
 	mySocket.on('server:test', function(data) {
 		alert(data);
