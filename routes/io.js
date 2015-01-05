@@ -84,7 +84,7 @@ module.exports = (function(app, io) {
 		socket.on('player:id', function(data) {
 			player = data;
 
-			socket.to(socket.id).emit('server:id', socket.id);
+			socket.emit('server:id', socket.id);
 		});
 
 		socket.emit('connected', { id: socket.id });

@@ -7,8 +7,7 @@ angular.module('app.game')
 
 	mySocket.emit('player:id', socket.io.engine.id);
 
-	$scope.$on('socket:server:test', function(data) {
-		console.log('server test via socket ipv mySocket');
+	mySocket.on('server:id', function(data) {
 		alert(data);
 	});
 
