@@ -17,7 +17,8 @@ angular.module('app.game')
 	});
 
 	mySocket.on('server:join', function(data) {
-		console.log('data');
+		console.log('server join!');
+		console.log(data);
 	});
 
 	mySocket.on('server:move', function(data) {
