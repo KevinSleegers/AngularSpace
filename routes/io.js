@@ -6,7 +6,6 @@ module.exports = (function(app, io) {
 
 	var players = {};
 	var games = {};
-	var player = '';
 
 	var playerNew = function(data) {
 
@@ -82,8 +81,6 @@ module.exports = (function(app, io) {
 		console.log('connected with id: ', socket.id);
 
 		socket.on('player:id', function(data) {
-			player = data;
-
 			socket.emit('server:id', socket.id);
 		});
 
