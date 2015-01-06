@@ -34,13 +34,6 @@ angular.module('app.menu')
 		// Generate random game id (20 characters)
 		var id = randomString(20);
 
-		var game = {};
-
-		game.id = id;
-		game.players = 1;
-
-		$scope.games[game.id] = game;
-
 		// Join the game!
 		$scope.joinGame(id);
 	}
