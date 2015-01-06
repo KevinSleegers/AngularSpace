@@ -22,10 +22,11 @@ module.exports = (function(app, io) {
 
 		players[player.id] = player;
 
-        io.sockets.connected[data.id].emit('server:games', games);
         console.log('Server: Sent available games to client!');
+        //io.sockets.connected[data.id].emit('server:games', games);
+        //io.to(data.id).emit('server:games', games);
 
-        socket.emit('server:test', 'abcdefg');
+        socket.emit('server:games', games);
 	}
 
 	var playerJoin = function(data) {
@@ -52,11 +53,14 @@ module.exports = (function(app, io) {
 		}
 
 		// Store player in specific room
-		//socket.join(data.game);
+		socket.join(data.game);
 
 		console.log('Server: Player:', data.id ,' is now in a game:', data.game);
 
 		//socket.emit('server:join', 'ajajajajaja');
+
+		// Emit the new (joined) player to all other players in game		
+    	socket.broadcast.to(game.id).emit('server:join', 'Server: someone just joined this game!');
 
 		//io.to(data.game).emit('server:join', 'ja!!!!');
 	};
@@ -78,7 +82,7 @@ module.exports = (function(app, io) {
 	console.log('testing 124');
 
 	g.io.on('connection', function(socket) {
-		console.log('connected with id: ', socket.id);
+		socket.broadcast.emit('user connected');
 
 		socket.on('player:id', function(data) {
 			socket.emit('server:id', socket.id);
@@ -86,12 +90,24 @@ module.exports = (function(app, io) {
 
 		socket.emit('connected', { id: socket.id });
 
-		socket.on('player:new', playerNew);
+		socket.on('player:new', function(data) {	
+			var player = {};
+
+			player.id 		= data.id;		
+			player.game		= '';
+			player.x 		= 0;
+			player.y 		= 0;
+			player.angle 	= 0;
+			player.boss		= false;
+
+			players[player.id] = player;
+
+	        console.log('Server: Sent updated games list to all clients!');
+	        socket.emit('server:games', games);
+		});
 
 		socket.on('player:join', function(data) {
 			if(players[data.id] == undefined) return;
-
-			console.log('playerJoin');
 
 			players[data.id].game = data.game;
 
@@ -114,32 +130,20 @@ module.exports = (function(app, io) {
 			// Store player in specific room
 			socket.join(data.game);
 
-			console.log('Server: Player:', data.id ,' is now in a game:', data.game);
+			socket.broadcast.to(data.game).emit('server:join', players[data.id]);
 
-			io.to(data.game).emit('server:join', 'ja!!!!');
+			console.log('Server: Player:', data.id ,' is now in a game:', data.game);
 		});
 
 		//socket.on('player:leave', playerLeave);
 		socket.on('player:move', function(data) {
-
-			var data = JSON.parse(data);
-
-			//console.log(data.id);
-
-			//console.log(players);
-
-			// Send new position to all clients in same room
-			//io.to(players[data.id].game).emit('server:move', data);
-
-			//console.log('player:move');
-
 			if(players[data.id] == undefined) return;
 
 			players[data.id].x 		= data.x;
 			players[data.id].y 		= data.y;
 			players[data.id].angle 	= data.angle;
 
-
+			socket.broadcast.to(players[data.id].game).emit('server:move', data);
 		});
 		//socket.on('player:shoot', playerShoot);
 		//socket.on('player:die', playerDie);

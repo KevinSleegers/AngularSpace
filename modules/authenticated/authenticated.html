@@ -8,8 +8,6 @@
 			<p class="navbar-text">Signed in as: {{auth.profile.name}}</p>
 			<button type="button" ng-click="logout()" style="float:right;" class="btn btn-default navbar-btn">Logout</button>
 		</div>
-		Token: {{auth.profile.identities[0].access_token}}<br>
-		User-id: {{auth.profile.identities[0].user_id}}
 	</nav>
 	<button type="button" ng-click="audio()">Music toggle..</button>
 	<div ui-view />

@@ -1,4 +1,4 @@
-window.createGame = function(scope, injector) {
+window.createGame = function(scope, injector, mySocket) {
 
 	console.log('Client: attempting to createGame');
 
@@ -8,6 +8,7 @@ window.createGame = function(scope, injector) {
 		h 	= parseInt(el.css('height'), 10);
 
 	var game = new Phaser.Game(w, h, Phaser.AUTO, 'gameCanvas');
+	window.game = game;
 
 	console.log('Client: Game variable has been created.');
 

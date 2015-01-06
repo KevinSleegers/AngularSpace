@@ -28,8 +28,19 @@ var app = angular.module('app', [
 	});
 })
 .factory('mySocket', function(socketFactory) {
-	return socketFactory();
+	var socket = socketFactory();
+	socket.forward('broadcast');
+	return socket;
+	//return socketFactory();
 })
+.service('socketService', ['$rootScope', function($rootScope) {
+	return {
+		session: '',
+		create: function(id) {
+			this.session = id;
+		}
+	}
+}])
 .run(function($rootScope, $state, auth, store, jwtHelper) {
 	auth.hookEvents();
 

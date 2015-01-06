@@ -10,7 +10,7 @@ angular.module('app.game', [
 		})
 		.state('auth.game.play', {
 			url: '/:id',
-			template: '<h1>Play da game!</h1><game-canvas></game-canvas>',
+			template: '<game-canvas></game-canvas>',
 			controller: 'GameCtrl'
 		});
 })

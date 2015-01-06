@@ -1,11 +1,13 @@
-var bounds = $(window).innerWidth(),
+var bounds = 5000,
 	firebase = new Firebase("https://spacebattalion.firebaseio.com/"),
-	bullets = 50
+	bullets = 50,
+	players = {},
 	musicToggle = true,
 	socket = io.connect(window.location.origin),
-	x = 0,
-	y = 0,
-	gameId = '';
+	oldX = 0,
+	oldY = 0,
+	gameId = '',
+	speed = 250;
 
 AngularSpace.Game = function(game) {
 	this.game;		//	a reference to the currently running game
@@ -33,13 +35,16 @@ AngularSpace.Game.prototype = {
 		var url = window.location.hash.split('/');
 		gameId = url[url.length-1];
 
-	socket.on('server:id', function(data) {
-		console.log('received session id from server!');
-		console.log(data);
-	});
+		cursors = this.input.keyboard.createCursorKeys();
 
-		// start ARCADE system
-		this.physics.startSystem(Phaser.Physics.ARCADE);
+		var self = this;
+		socket.on('server:join', function(data) {
+			self.playerMove(data);
+		});
+
+		socket.on('server:move', function(data) {
+			self.playerMove(data);
+		});
 
 		// background music
 		this.bgMusic = this.game.add.audio('backgroundMusic');
@@ -48,6 +53,11 @@ AngularSpace.Game.prototype = {
 		// background tiles
 		this.bg = this.add.tileSprite(0, 0, bounds, bounds, 'bg');
 		this.bg.autoScroll(50, 50);
+
+		this.world.setBounds(0, 0, bounds, bounds);
+
+		// start ARCADE system
+		this.physics.startSystem(Phaser.Physics.ARCADE);
 
 		this.bullets = this.game.add.group();
 		for(var i = 0; i < bullets; i++) {
@@ -68,68 +78,45 @@ AngularSpace.Game.prototype = {
 		this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'myPlane');		
 		this.player.anchor.setTo(0.5, 0.5);
 
-		this.game.physics.enable(this.player, Phaser.Physics.ARCADE);
+		this.camera.follow(this.player);	
 
-		// if new player connects, create it
-		socket.on('server:join', function(data) {
-			console.log('server:join');
-		});
+		this.game.physics.enable(this.player, Phaser.Physics.ARCADE);
 	},
 	update: function() {
+		this.player.body.velocity.setTo(0, 0);
 
-		// Move player to cursor, fix angle and rotation(speed)
-		var distance = this.game.math.distance(
-			this.player.x, this.player.y,
-			this.game.input.activePointer.x, this.game.input.activePointer.y
-		);
+        if(cursors.left.isDown) {
+        	if(cursors.left.isDown && cursors.down.isDown) {
+        		this.changePosition('-', this.diagonalSpeed(speed), '+', this.diagonalSpeed(speed), 135);
+        	} else if(cursors.left.isDown && cursors.up.isDown) {
+        		this.changePosition('-', this.diagonalSpeed(speed), '-', this.diagonalSpeed(speed), -135);
+        	} else {
+        		this.changePosition('-', speed, '', '', 180);
+        	}
+        } else if(cursors.right.isDown) {
+        	if(cursors.right.isDown && cursors.down.isDown) {
+        		this.changePosition('+', this.diagonalSpeed(speed), '+', this.diagonalSpeed(speed), 45);
+        	} else if(cursors.right.isDown && cursors.up.isDown) {
+        		this.changePosition('+', this.diagonalSpeed(speed), '-', this.diagonalSpeed(speed), -45);
+        	} else {
+        		this.changePosition('+', speed, '', '', 0);
+        	}
+        } else if(cursors.up.isDown) {
+        	if(cursors.up.isDown && cursors.down.isDown) {
+        		this.changePosition('', '', '', '', -90);
+        	} else {
+        		this.changePosition('','', '-', speed, -90);
+        	}
+        } else if(cursors.down.isDown) {
+        	if(cursors.down.isDown && cursors.up.isDown) {
+        		this.changePosition('', '', '', '', 90);
+        	} else {
+        		this.changePosition('','', '+', speed, 90);
+        	}
+        }
 
-		if(distance > 32) {		
-
-			var rotation = this.game.math.angleBetween(
-				this.player.x, this.player.y,
-				this.game.input.activePointer.x, this.game.input.activePointer.y
-			);
-
-			if(this.player.rotation !== rotation) {
-				var delta = rotation - this.player.rotation;
-
-				if(delta > Math.PI) delta -= Math.PI * 2;
-				if(delta < -Math.PI) delta += Math.PI * 2;
-
-				if(delta > 0) {
-					this.player.angle += 5;
-				} else {
-					this.player.angle -= 5;
-				}
-
-				this.player.body.velocity.x = Math.cos(rotation) * 250;
-				this.player.body.velocity.y = Math.sin(rotation) * 250;
-			}	
-
-			if(x !== this.player.x || y !== this.player.y) {
-
-				var pos = JSON.stringify({
-					game 	: gameId,
-					id 		: socket.io.engine.id,
-					x 		: this.player.x,
-					y  		: this.player.y,
-					angle 	: this.player.angle
-				});   
-
-				if(this.diff(this.player.x, x) >= 3 || this.diff(this.player.y, y) >= 3) {
-					socket.emit('player:move', pos);
-
-					x = this.player.x;
-					y = this.player.y;
-				}
-			}
-
-		} else {
-			this.player.body.velocity.setTo(0, 0);
-		}
-
-		// Shoot bullet on click or touch
-		if(this.game.input.activePointer.isDown) {
+		// Shoot bullet if spacebar is pressed
+		if(this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).isDown) {
 			this.shoot();
 		}
 	},
@@ -166,10 +153,58 @@ AngularSpace.Game.prototype = {
 			musicToggle = true;
 		}
 	},
+	changePosition: function(x, xs, y, ys, a) {
+		xs == undefined || '' ? xs = 0 : xs;
+		ys == undefined || '' ? ys = 0 : ys;
+
+		x == '' ? x = '+' : x;
+		y == '' ? y = '+' : y;
+
+		x == '+' ? this.player.body.velocity.x += xs : this.player.body.velocity.x -= xs;
+		y == '+' ? this.player.body.velocity.y += ys : this.player.body.velocity.y -= ys;
+
+		this.player.angle = a;
+
+		if(oldX !== this.player.x || oldY !== this.player.y) {
+			if(this.diff(this.player.x, oldX) >= 1 || this.diff(this.player.y, oldY) >= 1) {
+				socket.emit('player:move', {
+		        	game: 	gameId,
+		        	id: 	socket.io.engine.id,
+		        	x: 		this.player.x,
+		        	y: 		this.player.y,
+		        	angle: 	this.player.angle
+				});
+
+				oldX = this.player.x;
+				oldY = this.player.y;
+			}
+		}
+	},
+	diagonalSpeed: function(s) {
+		var d = Math.sqrt(Math.pow(s, 2) * 2) / 2;
+		return s;
+	},
 	diff: function(a, b) {
 		return Math.abs(a - b);
 	},
-	playerJoin: function(data) {
-		console.log('hey ho lets go!');
+	playerMove: function(data) {
+		// check if player exists within client
+		if(players[data.id] !== undefined) {
+			players[data.id].x 		= data.y;
+			players[data.id].y 		= data.y;
+			players[data.id].angle 	= data.angle;
+		} else {
+			players[data.id] 							= this.add.sprite(data.x, data.y, 'myPlane');
+	    	players[data.id].enableBody 				= true;
+	    	players[data.id].name 						= data.id;
+	    	players[data.id].health 					= 100;
+	    	players[data.id].angle 						= data.angle;
+
+			players[data.id].anchor.setTo(.5,.5);
+			this.physics.enable(players[data.id], Phaser.Physics.ARCADE);
+
+	    	players[data.id].body.collideWorldBounds 	= true;
+	    	players[data.id].body.immovable 			= true;
+		}
 	}
 };

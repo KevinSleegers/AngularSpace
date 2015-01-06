@@ -1,12 +1,9 @@
-<h1>Hier komt het game menu!</h1>
-
 <h2>Join available games</h2>
 <ul>
 	<li ng-repeat="game in games">
-		<button type="button" ng-click="joinGame(game.id)">Join {{game.id}}</button>
+		<button type="button" class="btn btn-default btn-lg" ng-click="joinGame(game.id)">Join {{game.id}}</button>
 	</li>
 </ul>
 
 <h2>Or.. create a new game!</h2>
-
 <button type="button" class="btn btn-default btn-lg" ng-click="createGame()">Create Game</button>

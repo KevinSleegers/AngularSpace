@@ -12,7 +12,7 @@ angular.module('app.auth', [
 			}
 		});
 })
-.controller('AuthCtrl', function($rootScope, $scope, $state, $http, auth) {
+.controller('AuthCtrl', function($rootScope, $scope, $state, $http, auth, mySocket) {
 	$scope.auth = auth;
 
 	$state.go('auth.menu');

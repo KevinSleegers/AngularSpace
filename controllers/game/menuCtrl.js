@@ -1,27 +1,32 @@
 angular.module('app.menu')
-.controller('MenuCtrl', ['$scope', '$state', '$firebase', 'randomString', 'mySocket', function($scope, $state, $firebase, randomString, mySocket) {
+.controller('MenuCtrl', ['$scope', '$state', '$firebase', 'randomString', 'mySocket', 'socketService', function($scope, $state, $firebase, randomString, mySocket, socketService) {
 	var ctrl = this;
-
-	var socket = io();
 
 	mySocket.on('connect', function() {
 		console.log('on Connect!');
 
 		$scope.session = socket.io.engine.id;
+		console.log('MenuCTRL : Verbonden via: ', $scope.session);
+
+		// Store current id in service socketService
+		socketService.create(socket.io.engine.id);
 
 		// Add new player
 		mySocket.emit('player:new', {
-			id		: $scope.session,
-			name	: 'Kevin',
-			status	: 'menu',
+			id		: socketService.session,
 			game 	: ''
 		});
-	});
 
-	$scope.games = {};
+		$scope.games = {};
 
-	$scope.$on('socket:server:games', function(data) {
-		$scope.games = data;
+		mySocket.on('server:games', function(data) {
+			console.log('updating game list');
+			$scope.games = data;
+		});
+
+		$scope.$watch('games', function(newVal, oldVal) {
+			$scope.games = newVal;
+		}, true);
 	});
 
 	// Let's get all available games from Firebase
@@ -41,12 +46,12 @@ angular.module('app.menu')
 	}
 
 	$scope.joinGame = function(id) {
-		console.log('Joining game..');
+		/*console.log('Joining game..');
 
 		mySocket.emit('player:join', {
 			id		: $scope.session,
 			game 	: id
-		});
+		});*/
 
 		// load the game
 		$state.go('auth.game.play', {id: id});
